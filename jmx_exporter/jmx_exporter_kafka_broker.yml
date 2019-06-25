@@ -1,0 +1,173 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements. See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#---------------------------------------------------------------------------------------------------------
+# Kafka Broker JMX Metrics : 
+# Compatible with version Apache Kafka v2.x.x / Confluent Plateform 5.x.x
+#---------------------------------------------------------------------------------------------------------
+hostPort: %HOST_PORT%
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+
+#Whitelist is used to reduce scrapping time
+whitelistObjectNames:
+  - java.lang:*
+  - kafka.cluster:*
+  - kafka.controller:*
+  - kafka.server:type=KafkaServer,name=BrokerState
+  - kafka.server:type=BrokerTopicMetrics,*
+  - kafka.server:type=FetcherStats,*
+  - kafka.server:type=ReplicaManager,*
+  - kafka.network:type=RequestMetrics,name=RequestsPerSec,request=OffsetCommit,version=*
+  - kafka.network:type=RequestMetrics,name=RequestsPerSec,request=FetchConsumer,version=*
+  - kafka.network:type=RequestMetrics,name=RequestsPerSec,request=FetchFollower,version=*
+  - kafka.network:type=RequestMetrics,name=RequestsPerSec,request=Produce,version=*
+  - kafka.network:type=RequestMetrics,name=RequestsPerSec,request=Metadata,version=*
+  - kafka.coordinator.group:*
+blacklistObjectNames:
+  - java.lang:type=ClassLoading,*
+  - java.lang:type=Compilation,*
+  - java.lang:type=MemoryManager,*
+  - kafka.utils:*
+  - kafka.controller:type=ControllerChannelManager,name=QueueSize,*
+  # Following metrics are exposed per topics
+  - kafka.log:type=Log,name=LogEndOffset,*
+  - kafka.log:type=Log,name=LogStartOffset,*
+  - kafka.cluster:type=Partition,name=InSyncReplicasCount,*
+  - kafka.cluster:type=Partition,name=LastStableOffsetLag,*
+  - kafka.cluster:type=Partition,name=ReplicasCounts,*
+  - kafka.cluster:type=Partition,name=UnderReplicated,*
+  - kafka.server:type=BrokerTopicMetrics,name=TotalFetchRequestsPerSec,*
+  - kafka.server:type=BrokerTopicMetrics,name=TotalProduceRequestsPerSec,*
+  - kafka.server:type=BrokerTopicMetrics,name=FailedProduceRequestsPerSec,*
+  - kafka.server:type=BrokerTopicMetrics,name=FailedFetchRequestsPerSec,*
+  - kafka.server:type=BrokerTopicMetrics,name=BytesRejectedPerSec,*
+
+rules:
+  #-------------------------------------------------------------------------------------------------------
+  # KafkaServers : State of broker server
+  #
+  #  - BrokerState
+  #-------------------------------------------------------------------------------------------------------
+  - pattern: kafka.server<type=KafkaServer, name=BrokerState><>Value
+    name: kafka_server_brokerstate
+    labels:
+      service: kafka-broker
+      env: cluster-demo
+
+  #-------------------------------------------------------------------------------------------------------
+  # Partition : Number of partitions for each broker
+  # - InSyncReplicasCount
+  # - LastStableOffsetLag
+  # - ReplicasCount
+  # - UnderReplicated
+  #-------------------------------------------------------------------------------------------------------
+  - pattern: kafka.cluster<type=Partition, name=([^,]+), topic=([^,]+), partition=([^,]+)><>Value
+    name: kafka_cluster_partition_$1
+    labels:
+      topic: $2
+      partition: $3
+      service: kafka-broker
+      env: cluster-demo
+  #-------------------------------------------------------------------------------------------------------
+  # KafkaController :
+  #
+  #  - ActiveControllerCount, OfflinePartitionsCount, PreferredReplicaImbalanceCount
+  #-------------------------------------------------------------------------------------------------------
+  - pattern: kafka.controller<type=KafkaController, name=([^,]+)><>Value
+    name: kafka_controller_$1
+    labels:
+      service: kafka-broker
+      env: cluster-demo
+
+  #-------------------------------------------------------------------------------------------------------
+  # ControllerStats : The event that is currently being processed by the elected broker controller.
+  #
+  #  - LeaderElectionRateAndtimeMs, UncleanLeaderElectionsPerSec, AutoLeaderBalanceRateAndTimeMs, ManualLeaderBalanceRateAndTimeMs
+  #  - ControllerChangeRateAndTimeMs,
+  #  - TopicChangeRateAndTimeMs, TopicDeletionRateAndTimeMs, PartitionReassignmentRateAndTimeMs
+  #  - IsrChangeRateAndTimeMs
+  #-------------------------------------------------------------------------------------------------------
+  - pattern: kafka.controller<type=ControllerStats, name=([^,]+)><>(OneMinuteRate|Mean|75thPercentile|99thPercentile)
+    name: kafka_controller_stats_$1
+    labels:
+      aggregate: $2
+      service: kafka-broker
+      env: cluster-demo
+  #-------------------------------------------------------------------------------------------------------
+  # Network KafkaRequest :
+  #
+  # - RequestPerSec,
+  #-------------------------------------------------------------------------------------------------------
+  - pattern: kafka.network<type=RequestMetrics, name=RequestsPerSec, request=(\w+), version=([0-9]+)><>(OneMinuteRate|Mean)
+    name: kafka_network_request_per_sec
+    labels:
+      request: $1
+      version: $2
+      aggregate: $3
+      service: kafka-broker
+      env: cluster-demo
+
+  #-------------------------------------------------------------------------------------------------------
+  # KafkaServer / BrokerTopicMetrics - I/O metrics :
+  #
+  # - BytesInPerSec, BytesOutPerSec, BytesRejectedPerSec,
+  # - FailedFetchRequestsPerSec, FailedProduceRequestsPerSec,MessagesInPerSec,
+  # - TotalFetchRequestPerSec, TotalProduceRequestPerSec, ReplicationBytesInPerSec, ReplicationBytesOutPerSec
+  #-------------------------------------------------------------------------------------------------------
+  - pattern: kafka.server<type=BrokerTopicMetrics, name=(BytesInPerSec|BytesOutPerSec|MessagesInPerSec|ReplicationBytesOutPerSec|ReplicationBytesInPerSec)><>(OneMinute)Rate
+    name: kafka_server_broker_topic_metrics_$1_rate
+    labels:
+      aggregate: $2
+      service: kafka-broker
+      env: cluster-demo
+
+  - pattern: kafka.server<type=BrokerTopicMetrics, name=(BytesInPerSec|BytesOutPerSec|MessagesInPerSec|ReplicationBytesOutPerSec|ReplicationBytesInPerSec), topic=([^,]+)><>(OneMinute)Rate
+    name: kafka_server_broker_topic_metrics_$1_rate
+    labels:
+      topic: $2
+      aggregate: $3
+      service: kafka-broker
+      env: cluster-demo
+  #-------------------------------------------------------------------------------------------------------
+  # FetcherStats : Replica Fetcher Thread stats
+  # - BytesPerSec / RequestsPerSec
+  #-------------------------------------------------------------------------------------------------------
+  - pattern: kafka.server<type=FetcherStats, name=([^,]+), clientId=([^,]+), brokerHost=([^,]+), brokerPort=([^,]+)><>([^,]+)Rate
+    name: kafka_server_fetcher_stats_$1
+    labels:
+      client_id: $2
+      broker_host: $3
+      broker_port: $4
+      aggregate: $5
+      service: kafka-broker
+      env: cluster-demo
+  #-------------------------------------------------------------------------------------------------------
+  # ReplicaManager :
+  #     - IsrExpandsPerSec, IsrShrinksPerSec, FailedIsrUpdatesPerSec
+  #     - LeaderCount, PartitionCount, UnderReplicatedPartitions)
+  #-------------------------------------------------------------------------------------------------------
+  - pattern: kafka.server<type=ReplicaManager, name=([^,]+)><>([^,]+)Rate
+    name: kafka_server_replica_manager_$1
+    labels:
+      aggregate: $2
+      service: kafka-broker
+      env: cluster-demo
+
+  - pattern: kafka.server<type=ReplicaManager, name=([^,]+)><>(Value)
+    name: kafka_server_replica_manager_$1
+    labels:
+      service: kafka-broker
+      env: cluster-demo

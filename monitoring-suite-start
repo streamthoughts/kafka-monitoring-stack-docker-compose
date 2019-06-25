@@ -1,0 +1,81 @@
+#/bin/bash
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements. See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+
+DIR=$(dirname "$0")
+CONFIG_DIR=$(dirname "$0")/etc
+BINARY_DIR=$(dirname "$0")/bin
+
+for i in "$@"
+do
+case $i in
+    --enable-security)
+    export SECURITY_ENABLE=true
+    shift
+    ;;
+    *)
+    # ignore
+    ;;
+esac
+done
+
+if [ -z "$SECURITY_ENABLE" ]; then
+    export SECURITY_ENABLE=false
+fi
+
+
+echo "*************************************************************************"
+echo "*       Staring Kafka Confluent Platform / Prometheus and Grafana       *"
+echo "*************************************************************************"
+
+if [ "$SECURITY_ENABLE" = "true" ]; then
+   DOCKER_COMPOSE_FILE="docker-compose-secured.yml" 
+else
+   DOCKER_COMPOSE_FILE="docker-compose.yml" 
+fi
+
+(. ./monitoring-suite-stop)
+
+echo "Copying grafana dashboards for container volumes"
+cp -r $DIR/grafana $CONFIG_DIR/grafana
+
+rm -rf $DIR/build/jmx_exporter && mkdir $DIR/build/jmx_exporter
+for i in kafka101:9991 kafka102:9992 kafka103:9993; do 
+   echo "Generate JMX exporter configuration for $i"
+   name=`echo $i  | awk -F ":" '{ print $1'} `
+   cat jmx_exporter/jmx_exporter_kafka_broker.yml | sed s,%HOST_PORT%,$i,g  > $DIR/build/jmx_exporter/jmx_exporter_kafka_broker_$name.yml
+done
+
+docker-compose -f ${DOCKER_COMPOSE_FILE} up -d zookeeper
+
+if [ "$SECURITY_ENABLE" = "true" ]; then
+    echo "Creating default kafka user for SASL/SCRAM"
+    ./$BINARY_DIR/create-admin-scram-users
+fi
+
+echo "Starting Kafka Brokers..."
+docker-compose -f ${DOCKER_COMPOSE_FILE} up -d kafka101 kafka102 kafka103
+
+echo "Starting JMX exporters, Prometheus and Grafana..."
+docker-compose -f ${DOCKER_COMPOSE_FILE} up -d prometheus grafana
+
+docker-compose -f ${DOCKER_COMPOSE_FILE} ps
+
+echo "Grafana (Login : admin / Password : kafka) : http://localhost:3000"
+echo "Prometheus : http://localhost:9090"
+
+exit 0
