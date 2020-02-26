@@ -53,7 +53,7 @@ fi
 echo "Copying grafana dashboards for container volumes"
 cp -r $DIR/grafana $CONFIG_DIR/grafana
 
-rm -rf $DIR/build/jmx_exporter && mkdir $DIR/build/jmx_exporter
+rm -rf $DIR/build/jmx_exporter && mkdir -p $DIR/build/jmx_exporter
 for i in kafka101:9991 kafka102:9992 kafka103:9993; do 
    echo "Generate JMX exporter configuration for $i"
    name=`echo $i  | awk -F ":" '{ print $1'} `
