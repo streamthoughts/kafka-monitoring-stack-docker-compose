@@ -15,8 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 1,
-  "iteration": 1561637763612,
+  "iteration": 1540310392981,
   "links": [],
   "panels": [
     {
@@ -118,9 +117,9 @@
       "colorBackground": false,
       "colorValue": true,
       "colors": [
-        "#299c46",
+        "#d44a3a",
         "rgba(237, 129, 40, 0.89)",
-        "#d44a3a"
+        "#299c46"
       ],
       "datasource": "Prometheus",
       "description": "Number of partitions that don’t have an active leader and are hence not writable or readable. Alert if value is greater than 0.",
@@ -201,9 +200,9 @@
       "colorBackground": false,
       "colorValue": true,
       "colors": [
-        "#299c46",
+        "#d44a3a",
         "rgba(237, 129, 40, 0.89)",
-        "#d44a3a"
+        "#299c46"
       ],
       "datasource": "Prometheus",
       "description": "Number of under-replicated partitions (| ISR | < | all replicas |). Alert if value is greater than 0.",
@@ -931,7 +930,6 @@
       ],
       "thresholds": [],
       "timeFrom": null,
-      "timeRegions": [],
       "timeShift": null,
       "title": "Messages In Per Topics",
       "tooltip": {
@@ -1284,7 +1282,6 @@
       ],
       "thresholds": [],
       "timeFrom": null,
-      "timeRegions": [],
       "timeShift": null,
       "title": "In-Sync Replica Expands Rate",
       "tooltip": {
@@ -1377,7 +1374,6 @@
       ],
       "thresholds": [],
       "timeFrom": null,
-      "timeRegions": [],
       "timeShift": null,
       "title": "In-Sync Replica Shrinks Rate",
       "tooltip": {
@@ -1501,7 +1497,6 @@
       ],
       "thresholds": [],
       "timeFrom": null,
-      "timeRegions": [],
       "timeShift": null,
       "title": "Leader Election Rate (ms/1MinuteRate)",
       "tooltip": {
@@ -1595,7 +1590,6 @@
       ],
       "thresholds": [],
       "timeFrom": null,
-      "timeRegions": [],
       "timeShift": null,
       "title": "Unclean Leader Election Rate (should be < 0)",
       "tooltip": {
@@ -1691,7 +1685,6 @@
       ],
       "thresholds": [],
       "timeFrom": null,
-      "timeRegions": [],
       "timeShift": null,
       "title": "Leader Count Per Broker",
       "tooltip": {
@@ -1783,7 +1776,6 @@
       ],
       "thresholds": [],
       "timeFrom": null,
-      "timeRegions": [],
       "timeShift": null,
       "title": "Number of Partitions Per Broker",
       "tooltip": {
@@ -1841,7 +1833,6 @@
           "value": "docker"
         },
         "datasource": "Prometheus",
-        "definition": "",
         "hide": 0,
         "includeAll": false,
         "label": "Environment",
@@ -1851,7 +1842,6 @@
         "query": "label_values(kafka_server_brokerstate, env)",
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
         "sort": 0,
         "tagValuesQuery": "",
         "tags": [],
@@ -1892,6 +1882,6 @@
   },
   "timezone": "browser",
   "title": "Kafka Cluster / Global HealthCheck",
-  "uid": "0BaZZFVZk",
+  "uid": "e-6AJQOik",
   "version": 1
 }

@@ -1,4 +1,4 @@
-#/bin/bash
+#!/usr/bin/env bash
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements. See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -19,7 +19,7 @@ set -e
 DIR=$(dirname "$0")
 DEMO_DIR=$(dirname "$0")/demo
 
-echo "Dropping all docker containers for Kafka Plateforms..."
+echo -e "\n🐳 Dropping all docker containers for Kafka Plateforms..."
 docker-compose rm -f -s -v
 
 exit 0

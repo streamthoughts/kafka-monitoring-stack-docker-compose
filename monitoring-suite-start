@@ -1,4 +1,4 @@
-#/bin/bash
+#!/usr/bin/env bash
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements. See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -27,11 +27,19 @@ case $i in
     export SECURITY_ENABLE=true
     shift
     ;;
+    --single-node)
+    export SINGLE_NODE=true
+    shift
+    ;;
     *)
     # ignore
     ;;
 esac
 done
+
+if [ -z "$SINGLE_NODE" ]; then
+  export SINGLE_NODE=false
+fi
 
 if [ -z "$SECURITY_ENABLE" ]; then
     export SECURITY_ENABLE=false
@@ -50,15 +58,27 @@ fi
 
 (. ./monitoring-suite-stop)
 
-echo "Copying grafana dashboards for container volumes"
+echo -e "\n⏳ Copying grafana dashboards for container volumes"
 cp -r $DIR/grafana $CONFIG_DIR/grafana
 
 rm -rf $DIR/build/jmx_exporter && mkdir -p $DIR/build/jmx_exporter
-for i in kafka101:9991 kafka102:9992 kafka103:9993; do 
-   echo "Generate JMX exporter configuration for $i"
-   name=`echo $i  | awk -F ":" '{ print $1'} `
-   cat jmx_exporter/jmx_exporter_kafka_broker.yml | sed s,%HOST_PORT%,$i,g  > $DIR/build/jmx_exporter/jmx_exporter_kafka_broker_$name.yml
-done
+
+generate_jmx_exporter_cfg (){
+  service="$1"
+  echo -e "\n⏳ Generate JMX exporter configuration for $service"
+  name=`echo $service  | awk -F ":" '{ print $1'} `
+  cat jmx_exporter/jmx_exporter_kafka_broker.yml | sed s,%HOST_PORT%,$service,g  > $DIR/build/jmx_exporter/jmx_exporter_kafka_broker_$name.yml
+}
+
+if [ "$SINGLE_NODE" = "true" ]; then
+   generate_jmx_exporter_cfg "kafka101:9991"
+else
+  for i in kafka101:9991 kafka102:9992 kafka103:9993; do 
+    generate_jmx_exporter_cfg "$1"
+  done  
+fi
+
+echo -e "\n🐳 Starting Zookeeper..."
 
 docker-compose -f ${DOCKER_COMPOSE_FILE} up -d zookeeper
 
@@ -67,15 +87,27 @@ if [ "$SECURITY_ENABLE" = "true" ]; then
     ./$BINARY_DIR/create-admin-scram-users
 fi
 
-echo "Starting Kafka Brokers..."
-docker-compose -f ${DOCKER_COMPOSE_FILE} up -d kafka101 kafka102 kafka103
+echo -e "\n🐳 Starting Kafka Brokers..."
+if [ "$SINGLE_NODE" = "true" ]; then
+  docker-compose -f ${DOCKER_COMPOSE_FILE} up -d kafka101
+else
+  docker-compose -f ${DOCKER_COMPOSE_FILE} up -d kafka101 kafka102 kafka103  
+fi
 
-echo "Starting JMX exporters, Prometheus and Grafana..."
+echo -e "\n🐳 Starting JMX exporters, Prometheus and Grafana..."
+
+if [ "$SINGLE_NODE" = "true" ]; then
+  docker-compose -f ${DOCKER_COMPOSE_FILE} up -d broker_jmx_exporter101
+else
+  docker-compose -f ${DOCKER_COMPOSE_FILE} up -d broker_jmx_exporter101 broker_jmx_exporter102 broker_jmx_exporter103  
+fi
+
 docker-compose -f ${DOCKER_COMPOSE_FILE} up -d prometheus grafana
 
+echo -e "\n*************************************************************************"
 docker-compose -f ${DOCKER_COMPOSE_FILE} ps
-
-echo "Grafana (Login : admin / Password : kafka) : http://localhost:3000"
-echo "Prometheus : http://localhost:9090"
+echo -e "\n*************************************************************************"
+echo -e "Grafana (Login : admin / Password : kafka) : http://localhost:3000"
+echo -e "Prometheus : http://localhost:9090"
 
 exit 0

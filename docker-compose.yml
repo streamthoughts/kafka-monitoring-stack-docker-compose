@@ -24,7 +24,7 @@ services:
     volumes:
      - ./grafana/provisioning:/etc/grafana/provisioning
      - ./grafana/dashboards:/var/lib/grafana/dashboards
-    container_name: kp-grafana
+    container_name: grafana
     depends_on:
      - prometheus
 
@@ -36,10 +36,6 @@ services:
      - ./etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     command: "--config.file=/etc/prometheus/prometheus.yml"
     container_name: prometheus
-    depends_on:
-     - broker_jmx_exporter101
-     - broker_jmx_exporter102
-     - broker_jmx_exporter103
 
   broker_jmx_exporter101:
     image: "sscaling/jmx-prometheus-exporter"
@@ -49,7 +45,9 @@ services:
      CONFIG_YML : "/etc/jmx_exporter/config.yml"
     volumes:
      - ./build/jmx_exporter/jmx_exporter_kafka_broker_kafka101.yml:/etc/jmx_exporter/config.yml
-    container_name: kp-jmx-exporter-101
+    container_name: jmx-exporter101
+    depends_on:
+     - kafka101
 
   broker_jmx_exporter102:
     image: "sscaling/jmx-prometheus-exporter"
@@ -59,7 +57,9 @@ services:
      CONFIG_YML : "/etc/jmx_exporter/config.yml"
     volumes:
      - ./build/jmx_exporter/jmx_exporter_kafka_broker_kafka102.yml:/etc/jmx_exporter/config.yml
-    container_name: kp-jmx-exporter-102
+    container_name: jmx-exporter102
+    depends_on:
+     - kafka102
 
   broker_jmx_exporter103:
     image: "sscaling/jmx-prometheus-exporter"
@@ -69,7 +69,9 @@ services:
      CONFIG_YML : "/etc/jmx_exporter/config.yml"
     volumes:
      - ./build/jmx_exporter/jmx_exporter_kafka_broker_kafka103.yml:/etc/jmx_exporter/config.yml
-    container_name: kp-jmx-exporter-103
+    container_name: jmx-exporter103
+    depends_on:
+     - kafka103
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -80,7 +82,7 @@ services:
       ZOOKEEPER_SYNC_LIMIT: 2
     ports:
      - 2181:2181
-    container_name: kp-zookeeper
+    container_name: zookeeper
 
   kafka101:
     image: confluentinc/cp-kafka:latest
@@ -89,7 +91,7 @@ services:
     ports:
       - 9091:9091
       - 9991:9991
-    container_name: kp-broker101
+    container_name: broker101
     environment:
       KAFKA_BROKER_ID: 101
       KAFKA_JMX_PORT: 9991
@@ -106,7 +108,7 @@ services:
     ports:
       - 9092:9092
       - 9992:9992
-    container_name: kp-broker102
+    container_name: broker102
     environment:
       KAFKA_BROKER_ID: 102
       KAFKA_JMX_PORT: 9992
@@ -123,7 +125,7 @@ services:
     ports:
       - 9093:9093
       - 9993:9993
-    container_name: kp-broker103
+    container_name: broker103
     environment:
       KAFKA_BROKER_ID: 103
       KAFKA_JMX_PORT: 9993
