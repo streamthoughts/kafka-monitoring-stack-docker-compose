@@ -1,4 +1,9 @@
 = Kafka Monitoring Stack for Docker Compose (Prometheus / Grafana)
+
+image:https://img.shields.io/badge/License-Apache%202.0-blue.svg[https://github.com/streamthoughts/kafka-monitoring-stack-docker-compose/blob/master/LICENSE]
+image:https://img.shields.io/github/issues-raw/streamthoughts/kafka-monitoring-stack-docker-compose[GitHub issues]
+image:https://img.shields.io/github/stars/streamthoughts/kafka-monitoring-stack-docker-compose?style=social[GitHub Repo stars]
+
 :toc:
 :toc-placement!:
 
@@ -113,15 +118,21 @@ $ ./bin/kafka-producer-perf-test --throughput 500 --num-records 100000000 --topi
 
 **6. Open Grafana.**
 
-Open your favorite web browser and open provided Grafana dashboard : Kafka Cluster / Global Healthcheck
+Open your favorite web browser and open one of the provided Grafana dashboards :
 
-(see [Accessing Grafana Web UI](#accessing-grafana-web-ui))
+* Kafka Cluster / Global Health Check
 
 image:./assets/kafka-cluster-healthcheck.png[kafka-cluster-healthcheck]
 
+* Kafka Cluster / Performance
+* Kafka Cluster / Zookeeper Connections
+* Kafka Cluster / JVM & OS
+* Kafka Cluster / Hard disk usage
+* Kafka Cluster / Topic Logs
+
 === Accessing Grafana Web UI
 
-Grafana is accessible at the address : [http://localhost:3000](http://localhost:3000)
+Grafana is accessible at the address : http://localhost:3000
 
 Security are :
 
@@ -130,7 +141,7 @@ Security are :
 
 === Accessing Prometheus Web UI
 
-Prometheus is accessible at the address : [http://localhost:9090](http://localhost:9090) 
+Prometheus is accessible at the address : http://localhost:9090
 
 == Contributions
 
