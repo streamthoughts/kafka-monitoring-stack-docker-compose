@@ -6,37 +6,82 @@ This repository demonstrates how to use Prometheus and Grafana for monitoring an
 
 toc::[]
 
-== Getting Started
+== Stack
 
-=== Start Confluent Platform using Docker
+* Kafka (Confluent)
+* Zookeeper
+* Kafka Schema Registry (Confluent)
+* Prometheus
+* Grafana
+* AKHQ (https://akhq.io/)
+* ZooNavigator (https://zoonavigator.elkozmon.com/en/stable/)
+
+== Getting Started
 
 **1. Clone the Kafka Monitoring Suite repository.**
 
 [source,bash]
 ----
-$ git clone https://github.com/streamthoughts/kafka-monitoring-suite-demo-prometheus.git
-$ cd kafka-monitoring-suite-demo-prometheus
+$ git clone https://github.com/streamthoughts/kafka-monitoring-stack-docker-compose.git
+$ cd kafka-monitoring-stack-docker-compose
 ----
 
 **2. Start Confluent/Kafka cluster.**
 
-Deploy Kafka, Prometheus and Grafana services using Docker and Docker Compose.
+Deploy one of the provided docker-compose stack:
 
-Note: Depending on your network speed, this may take few minutes to download all images.
+_Note: Depending on your network speed, this may take few minutes to download all images._
+
+=== Single Zookeeper/Kafka with Prometheus/Grafana
+
+Start/Stop with:
 
 [source,bash]
 ----
-#  single node Kafka Cluster
-$ docker-compose -f  zk-kafka-single-node-stack.yml
+$ ./single-node-stack-start.sh
+$ ./single-node-stack-stop.sh
 
-# or 3 nodes Kafka Cluster
-$ docker-compose -f  zk-kafka-multiple-nodes-stack.yml
+# or directly
+$ docker-compose -f  zk-kafka-single-node-stack.yml up -d
+$ docker-compose -f  zk-kafka-single-node-stack.yml down
+----
 
-# single node Kafka Cluster with SASL/PLAINTEXT enable.
-$ docker-compose -f  zk-kafka-single-node-secured-stack.yml
+=== Single Zookeeper / Multiple Kafka with Prometheus/Grafana
 
-# 3 nodes Kafka Cluster with SASL/PLAINTEXT enable.
-$ docker-compose -f  zk-kafka-multiple-nodes-secured-stack.yml
+[source,bash]
+----
+$ docker-compose -f  zk-kafka-multiple-nodes-stack.yml up -d
+$ docker-compose -f  zk-kafka-multiple-nodes-stack.yml down
+----
+
+=== Single Zookeeper/Kafka with Prometheus/Grafana (SASL/PLAINTEXT)
+
+[source,bash]
+----
+$ ./sasl-single-node-stack-start.sh
+$ ./sasl-single-node-stack-stop.sh
+----
+
+=== Single Zookeeper / Multiple Kafka with Prometheus/Grafana (SASL/PLAINTEXT)
+
+[source,bash]
+----
+$ docker-compose -f  zk-kafka-multiple-nodes-secured-stack.yml up -d
+$ docker-compose -f  zk-kafka-multiple-nodes-secured-stack.yml down
+----
+
+=== Full Stack (single node Kafka Cluster)
+
+Start/Stop with:
+
+[source,bash]
+----
+$ ./full-single-node-stack-start.sh
+$ ./full-single-node-stack-stop.sh
+
+# or directly
+$ docker-compose -f  zk-kafka-single-node-full-stack.yml up -d
+$ docker-compose -f  zk-kafka-single-node-full-stack.yml down
 ----
 
 **3. Create Topic.**
