@@ -37,43 +37,43 @@ services:
     command: "--config.file=/etc/prometheus/prometheus.yml"
     container_name: prometheus
 
-  broker_jmx_exporter101:
+  jmx-kafka101:
     image: "sscaling/jmx-prometheus-exporter"
     ports:
      - "5556:5556"
     environment:
      CONFIG_YML : "/etc/jmx_exporter/config.yml"
     volumes:
-     - ./build/jmx_exporter/jmx_exporter_kafka_broker_kafka101.yml:/etc/jmx_exporter/config.yml
-    container_name: jmx-exporter101
+     - ./etc/jmx_exporter/config_kafka101.yml:/etc/jmx_exporter/config.yml
+    container_name: jmx-kafka101
     depends_on:
      - kafka101
 
-  broker_jmx_exporter102:
+  jmx-kafka102:
     image: "sscaling/jmx-prometheus-exporter"
     ports:
-     - "5557:5556"
+     - "5556:5556"
     environment:
      CONFIG_YML : "/etc/jmx_exporter/config.yml"
     volumes:
-     - ./build/jmx_exporter/jmx_exporter_kafka_broker_kafka102.yml:/etc/jmx_exporter/config.yml
-    container_name: jmx-exporter102
+     - ./etc/jmx_exporter/config_kafka102.yml:/etc/jmx_exporter/config.yml
+    container_name: jmx-kafka102
     depends_on:
      - kafka102
 
-  broker_jmx_exporter103:
+  jmx-kafka103:
     image: "sscaling/jmx-prometheus-exporter"
     ports:
-     - "5558:5556"
+     - "5556:5556"
     environment:
      CONFIG_YML : "/etc/jmx_exporter/config.yml"
     volumes:
-     - ./build/jmx_exporter/jmx_exporter_kafka_broker_kafka103.yml:/etc/jmx_exporter/config.yml
-    container_name: jmx-exporter103
+     - ./etc/jmx_exporter/config_kafka103.yml:/etc/jmx_exporter/config.yml
+    container_name: jmx-kafka103
     depends_on:
      - kafka103
 
-  zookeeper:
+  zk1:
     image: confluentinc/cp-zookeeper:latest
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -82,55 +82,70 @@ services:
       ZOOKEEPER_SYNC_LIMIT: 2
     ports:
      - 2181:2181
-    container_name: zookeeper
+    container_name: zookeeper1
 
   kafka101:
     image: confluentinc/cp-kafka:latest
     depends_on:
-      - zookeeper
+      - zk1
     ports:
-      - 9091:9091
-      - 9991:9991
-    container_name: broker101
+      - 9092:9092
+      - 9992:9992
+    container_name: kafka101
     environment:
       KAFKA_BROKER_ID: 101
-      KAFKA_JMX_PORT: 9991
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka101:29091,PLAINTEXT_HOST://localhost:9091
+      KAFKA_JMX_PORT: 9992
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka101:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka101:29092
+      CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper1:2181
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_ENABLE: 'false'
 
   kafka102:
     image: confluentinc/cp-kafka:latest
     depends_on:
-      - zookeeper
-    ports:
-      - 9092:9092
-      - 9992:9992
-    container_name: broker102
-    environment:
-      KAFKA_BROKER_ID: 102
-      KAFKA_JMX_PORT: 9992
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka102:29092,PLAINTEXT_HOST://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-
-  kafka103:
-    image: confluentinc/cp-kafka:latest
-    depends_on:
-      - zookeeper
+      - zk1
     ports:
       - 9093:9093
       - 9993:9993
-    container_name: broker103
+    container_name: kafka102
     environment:
-      KAFKA_BROKER_ID: 103
+      KAFKA_BROKER_ID: 102
       KAFKA_JMX_PORT: 9993
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka103:29093,PLAINTEXT_HOST://localhost:9093
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka102:29093,PLAINTEXT_HOST://localhost:9093
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka102:29093
+      CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper1:2181
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_ENABLE: 'false'
+
+  kafka103:  
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zk1
+    ports:
+      - 9094:9094
+      - 9994:9994
+    container_name: kafka103
+    environment:
+      KAFKA_BROKER_ID: 103
+      KAFKA_JMX_PORT: 9994
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka102:29094,PLAINTEXT_HOST://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka103:29094
+      CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper1:2181
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_ENABLE: 'false'      

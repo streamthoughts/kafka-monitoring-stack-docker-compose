@@ -26,4 +26,4 @@ scrape_configs:
     # scheme defaults to 'http'.
 
     static_configs:
-    - targets: ['broker_jmx_exporter101:5556','broker_jmx_exporter102:5556', 'broker_jmx_exporter103:5556']
+    - targets: ['jmx-kafka101:5556','jmx-kafka102:5556', 'jmx-kafka103:5556']

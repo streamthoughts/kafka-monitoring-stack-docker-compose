@@ -24,7 +24,7 @@ services:
     volumes:
      - ./grafana/provisioning:/etc/grafana/provisioning
      - ./grafana/dashboards:/var/lib/grafana/dashboards
-    container_name: kp-grafana
+    container_name: grafana
     depends_on:
      - prometheus
 
@@ -36,42 +36,44 @@ services:
      - ./etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     command: "--config.file=/etc/prometheus/prometheus.yml"
     container_name: prometheus
-    depends_on:
-     - broker_jmx_exporter101
-     - broker_jmx_exporter102
-     - broker_jmx_exporter103
 
-  broker_jmx_exporter101:
+  jmx-kafka101:
     image: "sscaling/jmx-prometheus-exporter"
     ports:
      - "5556:5556"
     environment:
      CONFIG_YML : "/etc/jmx_exporter/config.yml"
     volumes:
-     - ./build/jmx_exporter/jmx_exporter_kafka_broker_kafka101.yml:/etc/jmx_exporter/config.yml
-    container_name: kp-jmx-exporter-101
+     - ./etc/jmx_exporter/config_kafka101.yml:/etc/jmx_exporter/config.yml
+    container_name: jmx-kafka101
+    depends_on:
+     - kafka101
 
-  broker_jmx_exporter102:
+  jmx-exporter102:
     image: "sscaling/jmx-prometheus-exporter"
     ports:
      - "5557:5556"
     environment:
      CONFIG_YML : "/etc/jmx_exporter/config.yml"
     volumes:
-     - ./build/jmx_exporter/jmx_exporter_kafka_broker_kafka102.yml:/etc/jmx_exporter/config.yml
-    container_name: kp-jmx-exporter-102
+     - ./etc/jmx_exporter/config_kafka102.yml:/etc/jmx_exporter/config.yml
+    container_name: jmx-kafka102
+    depends_on:
+     - kafka102
 
-  broker_jmx_exporter103:
+  jmx-exporter103:
     image: "sscaling/jmx-prometheus-exporter"
     ports:
      - "5558:5556"
     environment:
      CONFIG_YML : "/etc/jmx_exporter/config.yml"
     volumes:
-     - ./build/jmx_exporter/jmx_exporter_kafka_broker_kafka103.yml:/etc/jmx_exporter/config.yml
-    container_name: kp-jmx-exporter-103
+     - ./etc/jmx_exporter/config_kafka103.yml:/etc/jmx_exporter/config.yml
+    container_name: jmx-kafka103
+    depends_on:
+     - kafka103        
 
-  zookeeper:
+  zk1:
     image: confluentinc/cp-zookeeper:latest
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -85,26 +87,25 @@ services:
      - ./etc/zookeeper.properties:/etc/confluent/docker/zookeeper.properties.template
     ports:
      - 2181:2181
-    container_name: kp-zookeeper
+    container_name: zookeeper1
 
   kafka101:
     image: confluentinc/cp-kafka:latest
     depends_on:
-      - zookeeper
+      - zk1
     ports:
-      - 9091:9091
-      - 9991:9991
-    container_name: kp-broker101
+      - 9092:9092
+      - 9992:9992
+    container_name: kafka101
     volumes:
      - ./etc/secrets/kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf
     environment:
       KAFKA_BROKER_ID: 101
-      KAFKA_JMX_PORT: 9991
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://kafka101:29091,PLAINTEXT_HOST://localhost:9091
+      KAFKA_JMX_PORT: 9992
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://kafka101:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT,PLAINTEXT_HOST:SASL_PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
       KAFKA_SUPER_USERS: User:kafka
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true" 
@@ -114,25 +115,30 @@ services:
       #KAFKA_LOG4J_ROOT_LOGLEVEL: DEBUG
       #KAFKA_TOOLS_LOG4J_LOGLEVEL: DEBUG
       KAFKA_ZOOKEEPER_SET_ACL: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka101:29092
+      CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper1:2181
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_ENABLE: 'false'
 
   kafka102:
     image: confluentinc/cp-kafka:latest
     depends_on:
-      - zookeeper
+      - zk1
     ports:
-      - 9092:9092
-      - 9992:9992
-    container_name: kp-broker102
+      - 9093:9093
+      - 9993:9993
+    container_name: kafka102
     volumes:
      - ./etc/secrets/kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf
     environment:
       KAFKA_BROKER_ID: 102
-      KAFKA_JMX_PORT: 9992
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://kafka102:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_JMX_PORT: 9993
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://kafka102:29093,PLAINTEXT_HOST://localhost:9093
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT,PLAINTEXT_HOST:SASL_PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
       KAFKA_SUPER_USERS: User:kafka
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true" 
@@ -142,25 +148,30 @@ services:
       #KAFKA_LOG4J_ROOT_LOGLEVEL: DEBUG
       #KAFKA_TOOLS_LOG4J_LOGLEVEL: DEBUG
       KAFKA_ZOOKEEPER_SET_ACL: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka101:29092
+      CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper1:2181
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_ENABLE: 'false'
 
   kafka103:
     image: confluentinc/cp-kafka:latest
     depends_on:
-      - zookeeper
+      - zk1
     ports:
-      - 9093:9093
-      - 9993:9993
-    container_name: kp-broker103
+      - 9094:9094
+      - 9994:9994
+    container_name: kafka103
     volumes:
      - ./etc/secrets/kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf
     environment:
       KAFKA_BROKER_ID: 103
       KAFKA_JMX_PORT: 9993
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://kafka103:29093,PLAINTEXT_HOST://localhost:9093
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://kafka103:29094,PLAINTEXT_HOST://localhost:9094
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT,PLAINTEXT_HOST:SASL_PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
       KAFKA_SUPER_USERS: User:kafka
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
@@ -170,3 +181,9 @@ services:
       #KAFKA_LOG4J_ROOT_LOGLEVEL: DEBUG
       #KAFKA_TOOLS_LOG4J_LOGLEVEL: DEBUG
       KAFKA_ZOOKEEPER_SET_ACL: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka101:29092
+      CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper1:2181
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_ENABLE: 'false'

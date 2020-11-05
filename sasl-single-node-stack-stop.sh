@@ -16,10 +16,12 @@
 
 set -e
 
-DIR=$(dirname "$0")
-DEMO_DIR=$(dirname "$0")/demo
+DIR=$(readlink -f $0 | xargs dirname)
 
-echo -e "\n🐳 Dropping all docker containers for Kafka Plateforms..."
-docker-compose rm -f -s -v
+echo -e "\n🐳 Stopping Kafka Brokers..."
+
+docker-compose -f $DIR/zk-kafka-single-node-secured-stack.yml down
+
+docker-compose -f $DIR/zk-kafka-single-node-secured-stack.yml ps
 
 exit 0

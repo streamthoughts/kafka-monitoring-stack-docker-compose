@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements. See the NOTICE file distributed with
 # this work for additional information regarding copyright ownership.
@@ -14,14 +14,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e;
+set -e
 
-CONFIG_DIR=$(readlink -f $0 | xargs dirname)/etc
+DIR=$(dirname "$0")
+CONFIG_DIR=$(dirname "$0")/etc
 
-echo "Creating new user for SASL/SCRAM-SHA-[256|512]: (username:kafka, password:kafka) - This may take a few seconds..."
-docker run -it \
---env KAFKA_OPTS="-Djava.security.auth.login.config=/etc/kafka/secrets/kafka_server_jaas.conf -Dzookeeper.sasl.clientconfig=ZkClient" \
---network="host" \
---mount type=bind,source=${CONFIG_DIR}/secrets/,target=/etc/kafka/secrets/ \
-confluentinc/cp-kafka:latest \
-/usr/bin/kafka-configs --zookeeper localhost:2181 --alter --add-config 'SCRAM-SHA-256=[iterations=8192,password=kafka],SCRAM-SHA-512=[password=kafka]' --entity-type users --entity-name kafka
+rm -rf $CONFIG_DIR/jmx_exporter && mkdir -p $CONFIG_DIR/jmx_exporter
+
+generate_jmx_exporter_cfg (){
+  service="$1"
+  echo -e "\n⏳ Generate JMX exporter configuration for $service"
+  name=`echo $service  | awk -F ":" '{ print $1'} `
+  cat template/jmx_exporter_kafka_broker.yml | sed s,%HOST_PORT%,$service,g  > $CONFIG_DIR/jmx_exporter/config_$name.yml
+}
+
+for i in kafka101:9992 kafka102:9993 kafka103:9994; do 
+    generate_jmx_exporter_cfg "$i"
+done  
+
+exit 0
