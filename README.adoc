@@ -125,10 +125,15 @@ Open your favorite web browser and open one of the provided Grafana dashboards :
 image:./assets/kafka-cluster-healthcheck.png[kafka-cluster-healthcheck]
 
 * Kafka Cluster / Performance
+
+image:./assets/kafka-cluster-performance.png[kafka-cluster-performance]
+
 * Kafka Cluster / Zookeeper Connections
 * Kafka Cluster / JVM & OS
 * Kafka Cluster / Hard disk usage
 * Kafka Cluster / Topic Logs
+
+image:./assets/kafka-cluster-logs.png[kafka-cluster-log]
 
 === Accessing Grafana Web UI
 

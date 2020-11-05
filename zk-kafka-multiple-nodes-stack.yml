@@ -52,7 +52,7 @@ services:
   jmx-kafka102:
     image: "sscaling/jmx-prometheus-exporter"
     ports:
-     - "5556:5556"
+     - "5557:5556"
     environment:
      CONFIG_YML : "/etc/jmx_exporter/config.yml"
     volumes:
@@ -64,7 +64,7 @@ services:
   jmx-kafka103:
     image: "sscaling/jmx-prometheus-exporter"
     ports:
-     - "5556:5556"
+     - "5558:5556"
     environment:
      CONFIG_YML : "/etc/jmx_exporter/config.yml"
     volumes:
@@ -140,7 +140,7 @@ services:
       KAFKA_BROKER_ID: 103
       KAFKA_JMX_PORT: 9994
       KAFKA_ZOOKEEPER_CONNECT: zookeeper1:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka102:29094,PLAINTEXT_HOST://localhost:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka103:29094,PLAINTEXT_HOST://localhost:9094
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
