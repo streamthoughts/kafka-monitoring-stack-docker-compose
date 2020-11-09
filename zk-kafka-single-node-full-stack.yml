@@ -97,6 +97,23 @@ services:
       - zk1
       - kafka101
 
+  ksqldb-server:
+    image: confluentinc/cp-ksqldb-server:latest
+    hostname: ksqldb-server
+    ports:
+      - "8088:8088"
+    environment:
+      KSQL_BOOTSTRAP_SERVERS: PLAINTEXT://kafka101:29092
+      KSQL_LISTENERS: http://0.0.0.0:8088/
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: http://kafka-schema-registry:8081
+      KSQL_KSQL_EXTENSION_DIR: /var/lib/ksql/extension
+      KSQL_KSQL_SERVICE_ID: ksqldb-server_
+    depends_on:
+      - zk1
+      - kafka101
+#    volumes:
+#      - ./ksql-custom-udfs/:/var/lib/ksql/extension/
+
   zoonavigator:
     image: elkozmon/zoonavigator:0.8.0
     container_name: zoonavigator
