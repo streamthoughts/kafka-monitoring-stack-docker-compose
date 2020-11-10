@@ -17,6 +17,7 @@ toc::[]
 * Zookeeper
 * Kafka Schema Registry (Confluent)
 * KSQLDB
+* Kafka Connect
 * Prometheus
 * Grafana
 * AKHQ (https://akhq.io/)
