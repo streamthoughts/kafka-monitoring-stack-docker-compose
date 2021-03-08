@@ -115,7 +115,7 @@ Open a new terminal window, generate some message to simulate consumer load.
 
 [source,bash]
 ----
-$ ./bin/kafka-producer-perf-test --throughput 500 --num-records 100000000 --topic demo-topic --record-size 100
+$ ./bin/kafka-consumer-perf-test --messages 100000000 --timeout 1000000 --topic demo-topic --reporting-interval 1000 --show-detailed-stats  
 ----
 
 **6. Open Grafana.**
