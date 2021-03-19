@@ -43,6 +43,7 @@ services:
      - "5556:5556"
     environment:
      CONFIG_YML : "/etc/jmx_exporter/config.yml"
+     JVM_OPTS: "-Xmx512M"
     volumes:
      - ./etc/jmx_exporter/config_kafka101.yml:/etc/jmx_exporter/config.yml
     container_name: jmx-kafka101
@@ -55,6 +56,8 @@ services:
      - "5557:5556"
     environment:
      CONFIG_YML : "/etc/jmx_exporter/config.yml"
+     JVM_OPTS: "-Xmx512M"
+
     volumes:
      - ./etc/jmx_exporter/config_kafka102.yml:/etc/jmx_exporter/config.yml
     container_name: jmx-kafka102
@@ -67,6 +70,7 @@ services:
      - "5558:5556"
     environment:
      CONFIG_YML : "/etc/jmx_exporter/config.yml"
+     JVM_OPTS: "-Xmx512M"
     volumes:
      - ./etc/jmx_exporter/config_kafka103.yml:/etc/jmx_exporter/config.yml
     container_name: jmx-kafka103
@@ -105,6 +109,7 @@ services:
       CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper1:2181
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: 'false'
+      KAFKA_HEAP_OPTS: '-Xmx512M -Xms512M'
 
   kafka102:
     image: confluentinc/cp-kafka:latest
@@ -127,6 +132,7 @@ services:
       CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper1:2181
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: 'false'
+      KAFKA_HEAP_OPTS: '-Xmx512M -Xms512M'
 
   kafka103:  
     image: confluentinc/cp-kafka:latest
@@ -149,3 +155,4 @@ services:
       CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper1:2181
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: 'false'      
+      KAFKA_HEAP_OPTS: '-Xmx512M -Xms512M'

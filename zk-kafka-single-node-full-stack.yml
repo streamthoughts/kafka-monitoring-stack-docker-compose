@@ -43,6 +43,7 @@ services:
      - "5556:5556"
     environment:
      CONFIG_YML : "/etc/jmx_exporter/config.yml"
+     JVM_OPTS: "-Xmx512M" 
     volumes:
      - ./etc/jmx_exporter/config_kafka101.yml:/etc/jmx_exporter/config.yml
     container_name: jmx-kafka101
@@ -82,6 +83,7 @@ services:
       CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper1:2181
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: 'false'
+      KAFKA_HEAP_OPTS: '-Xmx512M -Xms512M'
 
   kafka-schema-registry:
     image: confluentinc/cp-schema-registry:latest
@@ -93,6 +95,7 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka101:29092
       SCHEMA_REGISTRY_HOST_NAME: kafka-schema-registry
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_OPTS: '-Xms512M -Xmx512M'
     depends_on:
       - zk1
       - kafka101
@@ -108,6 +111,8 @@ services:
       KSQL_KSQL_SCHEMA_REGISTRY_URL: http://kafka-schema-registry:8081
       KSQL_KSQL_EXTENSION_DIR: /var/lib/ksql/extension
       KSQL_KSQL_SERVICE_ID: ksqldb-server_
+      KSQL_HEAP_OPTS: '-Xms512M -Xmx1G'
+
     depends_on:
       - zk1
       - kafka101
@@ -139,6 +144,7 @@ services:
       CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_PLUGIN_PATH: '/usr/share/java,/etc/kafka-connect/jars'
+      KAFKA_HEAP_OPTS: '-Xmx512M -Xms512M'
     volumes:
       - ./connectors:/etc/kafka-connect/jars/
     depends_on:
