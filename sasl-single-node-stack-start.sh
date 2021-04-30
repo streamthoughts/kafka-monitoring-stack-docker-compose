@@ -26,7 +26,6 @@ echo "Creating default kafka user for SASL/SCRAM"
 
 echo -e "\n🐳 Starting Kafka Brokers..."
 docker-compose -f $DIR/zk-kafka-single-node-secured-stack.yml up -d
-
 docker-compose -f $DIR/zk-kafka-single-node-secured-stack.yml ps
 
 echo -e "\n------------------------------------------------------------------------------------------------------"

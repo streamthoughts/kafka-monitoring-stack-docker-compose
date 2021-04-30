@@ -97,7 +97,13 @@ Create `demo-topic` with 6 partitions and 3 replicas.
 
 [source,bash]
 ----
-$ ./bin/kafka-topics --create --partitions 6 --replication-factor 3 --topic demo-topic
+$ docker exec -it kafka101 \
+kafka-topics \
+--create \
+--partitions 6 \
+--replication-factor 3 \
+--topic demo-topic \
+--bootstrap-server kafka101:29092
 ----
 
 **4. Produce messages.**
@@ -106,7 +112,13 @@ Open a new terminal window, generate some message to simulate producer load.
 
 [source,bash]
 ----
-$ ./bin/kafka-producer-perf-test --throughput 500 --num-records 100000000 --topic demo-topic --record-size 100
+$ docker exec -it kafka101 \
+kafka-producer-perf-test \
+--throughput 500 \
+--num-records 100000000 \
+--topic demo-topic \
+--record-size 100 \
+--producer-props bootstrap.servers=kafka101:29092
 ----
 
 **5. Consume messages.**
@@ -115,7 +127,14 @@ Open a new terminal window, generate some message to simulate consumer load.
 
 [source,bash]
 ----
-$ ./bin/kafka-consumer-perf-test --messages 100000000 --timeout 1000000 --topic demo-topic --reporting-interval 1000 --show-detailed-stats  
+$ docker exec -it kafka101 \
+kafka-consumer-perf-test \
+--messages 100000000 \
+--timeout 1000000 \
+--topic demo-topic \
+--reporting-interval 1000 \
+--show-detailed-stats \
+--bootstrap-server kafka101:29092
 ----
 
 **6. Open Grafana.**
