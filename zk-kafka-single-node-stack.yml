@@ -15,7 +15,7 @@
 version: '3'
 services:
   grafana:
-    image: "grafana/grafana"
+    image: "grafana/grafana:${GRAFANA_VERSION}"
     ports:
      - "3000:3000"
     environment:
@@ -29,7 +29,7 @@ services:
      - prometheus
 
   prometheus:
-    image: "prom/prometheus"
+    image: "prom/prometheus:${PROMETHEUS_VERSION}"
     ports:
      - "9090:9090"
     volumes:
@@ -50,23 +50,23 @@ services:
      - kafka101
 
   zk1:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:${CONFLUENT_VERSION}
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKEEPER_INIT_LIMIT: 5
       ZOOKEEPER_SYNC_LIMIT: 2
     ports:
-     - 2181:2181
+     - "2181:2181"
     container_name: zookeeper1
 
   kafka101:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:${CONFLUENT_VERSION}
     depends_on:
       - zk1
     ports:
-      - 9092:9092
-      - 9991:9991
+      - "9092:9092"
+      - "9991:9991"
     container_name: kafka101
     environment:
       KAFKA_BROKER_ID: 101
@@ -78,8 +78,9 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_LOG_RETENTION_MS: 60000
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka101:29092
       CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper1:2181
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: 'false'
-      KAFKA_HEAP_OPTS: '-Xmx512M -Xms512M'
+      KAFKA_HEAP_OPTS: ${KAFKA_HEAP_OPTS}

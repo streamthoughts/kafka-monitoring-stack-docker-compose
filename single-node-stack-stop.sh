@@ -20,8 +20,8 @@ DIR=$(readlink -f $0 | xargs dirname)
 
 echo -e "\n🐳 Stopping Kafka Brokers..."
 
-docker-compose -f $DIR/zk-kafka-single-node-stack.yml down
+docker-compose -f "$DIR/zk-kafka-single-node-stack.yml" down -v --remove-orphans
 
-docker-compose -f $DIR/zk-kafka-single-node-stack.yml ps
+docker-compose -f "$DIR/zk-kafka-single-node-stack.yml" ps
 
 exit 0

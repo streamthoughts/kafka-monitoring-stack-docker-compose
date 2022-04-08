@@ -12,10 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-version: '3'
+version: '2.4'
 services:
   grafana:
-    image: "grafana/grafana"
+    image: "grafana/grafana:${GRAFANA_VERSION}"
     ports:
      - "3000:3000"
     environment:
@@ -29,7 +29,7 @@ services:
      - prometheus
 
   prometheus:
-    image: "prom/prometheus"
+    image: "prom/prometheus:${PROMETHEUS_VERSION}"
     ports:
      - "9090:9090"
     volumes:
@@ -50,7 +50,7 @@ services:
      - kafka101
 
   zk1:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:${CONFLUENT_VERSION}
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -62,16 +62,16 @@ services:
      - ./etc/secrets/zookeeper_jaas.conf:/etc/kafka/zookeeper_jaas.conf
      - ./etc/zookeeper.properties:/etc/confluent/docker/zookeeper.properties.template
     ports:
-     - 2181:2181
+     - "2181:2181"
     container_name: zookeeper1
 
   kafka101:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:${CONFLUENT_VERSION}
     depends_on:
       - zk1
     ports:
-      - 9092:9092
-      - 9991:9991
+      - "9092:9092"
+      - "9991:9991"
     container_name: kafka101
     volumes:
      - ./etc/secrets/kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf
@@ -88,6 +88,7 @@ services:
       KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-256
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf -Dzookeeper.sasl.clientconfig=ZkClient
+      KAFKA_HEAP_OPTS: ${KAFKA_BROKER_HEAP_OPTS}
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=DEBUG"
       #KAFKA_LOG4J_ROOT_LOGLEVEL: DEBUG
       #KAFKA_TOOLS_LOG4J_LOGLEVEL: DEBUG
@@ -99,3 +100,4 @@ services:
       CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper1:2181
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: 'false'
+    mem_limit: ${KAFKA_BROKER_MEM_LIMIT}

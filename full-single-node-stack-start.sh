@@ -20,9 +20,9 @@ DIR=$(readlink -f $0 | xargs dirname)
 
 echo -e "\n🐳 Starting Kafka Brokers..."
 
-docker-compose -f $DIR/zk-kafka-single-node-full-stack.yml up -d
+docker-compose -f "$DIR/zk-kafka-single-node-full-stack.yml" up -d --remove-orphans
 
-docker-compose -f $DIR/zk-kafka-single-node-full-stack.yml ps
+docker-compose -f "$DIR/zk-kafka-single-node-full-stack.yml" ps
 
 echo -e "\n------------------------------------------------------------------------------------------------------"
 echo -e "Grafana (Login : admin / Password : kafka) : http://localhost:3000"

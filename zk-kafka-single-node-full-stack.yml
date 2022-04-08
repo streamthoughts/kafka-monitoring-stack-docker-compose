@@ -12,10 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-version: '3'
+version: '2.4'
 services:
   grafana:
-    image: "grafana/grafana"
+    image: "grafana/grafana:${GRAFANA_VERSION}"
     ports:
      - "3000:3000"
     environment:
@@ -29,7 +29,7 @@ services:
      - prometheus
 
   prometheus:
-    image: "prom/prometheus"
+    image: "prom/prometheus:${PROMETHEUS_VERSION}"
     ports:
      - "9090:9090"
     volumes:
@@ -43,7 +43,7 @@ services:
      - "5556:5556"
     environment:
      CONFIG_YML : "/etc/jmx_exporter/config.yml"
-     JVM_OPTS: "-Xmx512M" 
+     JVM_OPTS: ${PROMETHEUS_JMX_AGENT_JVM_OPTS}
     volumes:
      - ./etc/jmx_exporter/config_kafka101.yml:/etc/jmx_exporter/config.yml
     container_name: jmx-kafka101
@@ -51,23 +51,24 @@ services:
      - kafka101
 
   zk1:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:${CONFLUENT_VERSION}
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKEEPER_INIT_LIMIT: 5
       ZOOKEEPER_SYNC_LIMIT: 2
     ports:
-     - 2181:2181
+     - "2181:2181"
     container_name: zookeeper1
 
   kafka101:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:${CONFLUENT_VERSION}
     depends_on:
       - zk1
     ports:
-      - 9092:9092
-      - 9991:9991
+      - "9092:9092"
+      - "9991:9991"
+
     container_name: kafka101
     environment:
       KAFKA_BROKER_ID: 101
@@ -83,10 +84,11 @@ services:
       CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper1:2181
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: 'false'
-      KAFKA_HEAP_OPTS: '-Xmx512M -Xms512M'
+      KAFKA_HEAP_OPTS: ${KAFKA_BROKER_HEAP_OPTS}
+    mem_limit: ${KAFKA_BROKER_MEM_LIMIT}
 
   kafka-schema-registry:
-    image: confluentinc/cp-schema-registry:latest
+    image: confluentinc/cp-schema-registry:${CONFLUENT_VERSION}
     hostname: kafka-schema-registry
     container_name: kafka-schema-registry
     ports:
@@ -95,13 +97,14 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka101:29092
       SCHEMA_REGISTRY_HOST_NAME: kafka-schema-registry
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
-      SCHEMA_REGISTRY_OPTS: '-Xms512M -Xmx512M'
+      SCHEMA_REGISTRY_OPTS: ${SCHEMA_REGISTRY_HEAP_OPTS}
     depends_on:
       - zk1
       - kafka101
+    mem_limit: ${SCHEMA_REGISTRY_MEM_LIMIT}
 
   ksqldb-server:
-    image: confluentinc/cp-ksqldb-server:latest
+    image: confluentinc/cp-ksqldb-server:${CONFLUENT_VERSION}
     hostname: ksqldb-server
     ports:
       - "8088:8088"
@@ -111,16 +114,16 @@ services:
       KSQL_KSQL_SCHEMA_REGISTRY_URL: http://kafka-schema-registry:8081
       KSQL_KSQL_EXTENSION_DIR: /var/lib/ksql/extension
       KSQL_KSQL_SERVICE_ID: ksqldb-server_
-      KSQL_HEAP_OPTS: '-Xms512M -Xmx1G'
-
+      KSQL_HEAP_OPTS: ${KAFKA_KSQL_HEAP_OPTS}
     depends_on:
       - zk1
       - kafka101
     volumes:
       - ./ksqldb-extensions:/var/lib/ksql/extension/
+    mem_limit: ${KAFKA_KSQL_MEM_LIMIT}
 
   kafka-connect:
-    image: confluentinc/cp-kafka-connect:latest
+    image: confluentinc/cp-kafka-connect:${CONFLUENT_VERSION}
     hostname: kafka-connect
     ports:
       - "8083:8083"
@@ -144,16 +147,17 @@ services:
       CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
       CONNECT_PLUGIN_PATH: '/usr/share/java,/etc/kafka-connect/jars'
-      KAFKA_HEAP_OPTS: '-Xmx512M -Xms512M'
+      KAFKA_HEAP_OPTS: ${KAFKA_CONNECT_HEAP_OPTS}
     volumes:
       - ./connectors:/etc/kafka-connect/jars/
     depends_on:
       - zk1
       - kafka101
       - kafka-schema-registry
+    mem_limit: ${KAFKA_CONNECT_MEM_LIMIT}
 
   zoonavigator:
-    image: elkozmon/zoonavigator:0.8.0
+    image: elkozmon/zoonavigator:${ZOONAVIGATOR_VERSION}
     container_name: zoonavigator
     ports:
       - "8000:8000"
@@ -164,7 +168,7 @@ services:
       - zk1
 
   akhq:
-    image: tchiotludo/akhq
+    image: tchiotludo/akhq:${AKHQ_VERSION}
     container_name: akhq
     environment:
       AKHQ_CONFIGURATION: |
@@ -178,7 +182,7 @@ services:
 #              connect:
 #                url: "http://connect:8083"
     ports:
-      - 8080:8080
+      - "8080:8080"
     depends_on:
       - kafka101
       - kafka-schema-registry

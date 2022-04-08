@@ -12,10 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-version: '3'
+version: '2.4'
 services:
   grafana:
-    image: "grafana/grafana"
+    image: "grafana/grafana:${GRAFANA_VERSION}"
     ports:
      - "3000:3000"
     environment:
@@ -29,7 +29,7 @@ services:
      - prometheus
 
   prometheus:
-    image: "prom/prometheus"
+    image: "prom/prometheus:${PROMETHEUS_VERSION}"
     ports:
      - "9090:9090"
     volumes:
@@ -43,7 +43,7 @@ services:
      - "5556:5556"
     environment:
      CONFIG_YML : "/etc/jmx_exporter/config.yml"
-     JVM_OPTS: "-Xmx512M"
+     JVM_OPTS: ${PROMETHEUS_JMX_AGENT_JVM_OPTS}
     volumes:
      - ./etc/jmx_exporter/config_kafka101.yml:/etc/jmx_exporter/config.yml
     container_name: jmx-kafka101
@@ -56,7 +56,7 @@ services:
      - "5557:5556"
     environment:
      CONFIG_YML : "/etc/jmx_exporter/config.yml"
-     JVM_OPTS: "-Xmx512M"
+     JVM_OPTS: ${PROMETHEUS_JMX_AGENT_JVM_OPTS}
 
     volumes:
      - ./etc/jmx_exporter/config_kafka102.yml:/etc/jmx_exporter/config.yml
@@ -70,7 +70,7 @@ services:
      - "5558:5556"
     environment:
      CONFIG_YML : "/etc/jmx_exporter/config.yml"
-     JVM_OPTS: "-Xmx512M"
+     JVM_OPTS: ${PROMETHEUS_JMX_AGENT_JVM_OPTS}
     volumes:
      - ./etc/jmx_exporter/config_kafka103.yml:/etc/jmx_exporter/config.yml
     container_name: jmx-kafka103
@@ -78,23 +78,23 @@ services:
      - kafka103
 
   zk1:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:${CONFLUENT_VERSION}
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
       ZOOKEEPER_INIT_LIMIT: 5
       ZOOKEEPER_SYNC_LIMIT: 2
     ports:
-     - 2181:2181
+     - "2181:2181"
     container_name: zookeeper1
 
   kafka101:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:${CONFLUENT_VERSION}
     depends_on:
       - zk1
     ports:
-      - 9091:9091
-      - 9991:9991
+      - "9091:9091"
+      - "9991:9991"
     container_name: kafka101
     environment:
       KAFKA_BROKER_ID: 101
@@ -109,15 +109,16 @@ services:
       CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper1:2181
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: 'false'
-      KAFKA_HEAP_OPTS: '-Xmx512M -Xms512M'
+      KAFKA_HEAP_OPTS: ${KAFKA_BROKER_HEAP_OPTS}
+    mem_limit: ${KAFKA_BROKER_MEM_LIMIT}
 
   kafka102:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:${CONFLUENT_VERSION}
     depends_on:
       - zk1
     ports:
-      - 9092:9092
-      - 9992:9992
+      - "9092:9092"
+      - "9992:9992"
     container_name: kafka102
     environment:
       KAFKA_BROKER_ID: 102
@@ -132,15 +133,16 @@ services:
       CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper1:2181
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: 'false'
-      KAFKA_HEAP_OPTS: '-Xmx512M -Xms512M'
+      KAFKA_HEAP_OPTS: ${KAFKA_BROKER_HEAP_OPTS}
+    mem_limit: ${KAFKA_BROKER_MEM_LIMIT}
 
   kafka103:  
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:${CONFLUENT_VERSION}
     depends_on:
       - zk1
     ports:
-      - 9093:9093
-      - 9993:9993
+      - "9093:9093"
+      - "9993:9993"
     container_name: kafka103
     environment:
       KAFKA_BROKER_ID: 103
@@ -155,4 +157,5 @@ services:
       CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper1:2181
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: 'false'      
-      KAFKA_HEAP_OPTS: '-Xmx512M -Xms512M'
+      KAFKA_HEAP_OPTS: ${KAFKA_BROKER_HEAP_OPTS}
+    mem_limit: ${KAFKA_BROKER_MEM_LIMIT}
