@@ -1,0 +1,171 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements. See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+version: '2.4'
+services:
+  grafana:
+    image: "grafana/grafana:${GRAFANA_VERSION}"
+    ports:
+     - "3000:3000"
+    environment:
+      GF_PATHS_DATA : /var/lib/grafana
+      GF_SECURITY_ADMIN_PASSWORD : kafka
+    volumes:
+     - ./grafana/provisioning:/etc/grafana/provisioning
+     - ./grafana/dashboards:/var/lib/grafana/dashboards
+    container_name: grafana
+    depends_on:
+     - prometheus
+
+  prometheus:
+    image: "prom/prometheus:${PROMETHEUS_VERSION}"
+    ports:
+     - "9090:9090"
+    volumes:
+     - ./etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command: "--config.file=/etc/prometheus/prometheus.yml"
+    container_name: prometheus
+
+  jmx-kafka101:
+    image: "sscaling/jmx-prometheus-exporter"
+    ports:
+     - "5556:5556"
+    environment:
+     CONFIG_YML : "/etc/jmx_exporter/config.yml"
+     JVM_OPTS: ${PROMETHEUS_JMX_AGENT_JVM_OPTS}
+    volumes:
+     - ./etc/jmx_exporter/config_kafka101.yml:/etc/jmx_exporter/config.yml
+    container_name: jmx-kafka101
+    depends_on:
+     - kafka101
+
+  jmx-kafka102:
+    image: "sscaling/jmx-prometheus-exporter"
+    ports:
+     - "5557:5556"
+    environment:
+     CONFIG_YML : "/etc/jmx_exporter/config.yml"
+     JVM_OPTS: ${PROMETHEUS_JMX_AGENT_JVM_OPTS}
+
+    volumes:
+     - ./etc/jmx_exporter/config_kafka102.yml:/etc/jmx_exporter/config.yml
+    container_name: jmx-kafka102
+    depends_on:
+     - kafka102
+
+  jmx-kafka103:
+    image: "sscaling/jmx-prometheus-exporter"
+    ports:
+     - "5558:5556"
+    environment:
+     CONFIG_YML : "/etc/jmx_exporter/config.yml"
+     JVM_OPTS: ${PROMETHEUS_JMX_AGENT_JVM_OPTS}
+    volumes:
+     - ./etc/jmx_exporter/config_kafka103.yml:/etc/jmx_exporter/config.yml
+    container_name: jmx-kafka103
+    depends_on:
+     - kafka103
+
+  kafka101:
+    image: "confluentinc/cp-kafka:${CONFLUENT_VERSION}"
+    ports:
+      - "19092:9092"
+      - "9991:9991"
+    container_name: kafka101
+    environment:
+      KAFKA_BROKER_ID: 101
+      # WARN: node.id must be set to the same value as broker.id
+      KAFKA_NODE_ID: 101
+      # random cluster ID used for formatting LOG_DIR for KRaft
+      KAFKA_CLUSTER_ID: 'xtzWWN4bTjitpL3kfd9s5g' 
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '101@kafka101:29093,102@kafka102:29093,103@kafka103:29093'
+      KAFKA_PROCESS_ROLES: 'broker,controller' 
+      KAFKA_JMX_PORT: 9991
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka101:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka101:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://kafka101:29093'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka101:29092
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_ENABLE: 'false'
+      KAFKA_HEAP_OPTS: ${KAFKA_BROKER_HEAP_OPTS}
+    mem_limit: ${KAFKA_BROKER_MEM_LIMIT}
+    volumes:
+      - ./zkless_run.sh:/tmp/zkless_run.sh
+    command: "bash -c 'if [ ! -f /tmp/zkless_run.sh ]; then echo \"ERROR: Did you forget the zkless_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/zkless_run.sh && /etc/confluent/docker/run ; fi'"    
+
+  kafka102:
+    image: "confluentinc/cp-kafka:${CONFLUENT_VERSION}"
+    ports:
+      - "29092:9092"
+      - "9992:9992"
+    container_name: kafka102
+    environment:
+      KAFKA_BROKER_ID: 102
+      # WARN: node.id must be set to the same value as broker.id
+      KAFKA_NODE_ID: 102
+      # random cluster ID used for formatting LOG_DIR for KRaft
+      KAFKA_CLUSTER_ID: 'xtzWWN4bTjitpL3kfd9s5g' 
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '101@kafka101:29093,102@kafka102:29093,103@kafka103:29093'
+      KAFKA_PROCESS_ROLES: 'broker,controller' 
+      KAFKA_JMX_PORT: 9992
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka102:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka102:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://kafka102:29093'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka102:29092
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_ENABLE: 'false'
+      KAFKA_HEAP_OPTS: ${KAFKA_BROKER_HEAP_OPTS}
+    mem_limit: ${KAFKA_BROKER_MEM_LIMIT}
+    volumes:
+      - ./zkless_run.sh:/tmp/zkless_run.sh
+    command: "bash -c 'if [ ! -f /tmp/zkless_run.sh ]; then echo \"ERROR: Did you forget the zkless_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/zkless_run.sh && /etc/confluent/docker/run ; fi'"    
+
+  kafka103:  
+    image: "confluentinc/cp-kafka:${CONFLUENT_VERSION}"
+    ports:
+      - "39092:9092"
+      - "9993:9993"
+    container_name: kafka103
+    environment:
+      KAFKA_BROKER_ID: 103
+      # WARN: node.id must be set to the same value as broker.id
+      KAFKA_NODE_ID: 103
+      # random cluster ID used for formatting LOG_DIR for KRaft
+      KAFKA_CLUSTER_ID: 'xtzWWN4bTjitpL3kfd9s5g' 
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '101@kafka101:29093,102@kafka102:29093,103@kafka103:29093'
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_JMX_PORT: 9993
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka103:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka103:29092,PLAINTEXT_HOST://0.0.0.0:9092,CONTROLLER://kafka103:29093'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka103:29092
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_ENABLE: 'false'      
+      KAFKA_HEAP_OPTS: ${KAFKA_BROKER_HEAP_OPTS}
+    mem_limit: ${KAFKA_BROKER_MEM_LIMIT}
+    volumes:
+      - ./zkless_run.sh:/tmp/zkless_run.sh
+    command: "bash -c 'if [ ! -f /tmp/zkless_run.sh ]; then echo \"ERROR: Did you forget the zkless_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/zkless_run.sh && /etc/confluent/docker/run ; fi'"    
