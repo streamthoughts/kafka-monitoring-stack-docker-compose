@@ -13,21 +13,15 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-set -e;
+set -e
 
-configDir=$(readlink -f $0 | xargs dirname)/../etc
+BASEDIR=$(dirname "$(readlink -f $0)")
+DOCKERDIR="$BASEDIR"
 
-DOCKER_KAFKA_OPTS=""
-DOCKER_MOUNT_SECRETS=""
+echo -e "\n🐳 Stopping previous Kafka Docker-Compose stacks..."
+for COMPOSE in "$DOCKERDIR/"*.yml; do
+  echo "Removing stack for $COMPOSE"
+  (cd "$BASEDIR"; docker compose -f "$COMPOSE" down --remove-orphans --volumes)
+done
 
-if [ "$SECURITY_ENABLE" = "true" ]; then
-    echo "security_enable=true"
-    DOCKER_KAFKA_OPTS="--env KAFKA_OPTS=\"-Djava.security.auth.login.config=/etc/kafka/secrets/kafka_server_jaas.conf -Dzookeeper.sasl.clientconfig=ZkClient\""
-    DOCKER_MOUNT_SECRETS="--mount type=bind,source=${configDir}/secrets/,target=/etc/kafka/secrets/"
-fi 
-
-eval "docker run -it ${DOCKER_MOUNT_SECRETS} ${DOCKER_KAFKA_OPTS} \
- --network="host" \
-confluentinc/cp-kafka:latest /usr/bin/kafka-configs $@"
-
-exit 0
+exit 0;

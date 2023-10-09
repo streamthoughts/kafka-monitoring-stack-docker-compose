@@ -1,18 +1,18 @@
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements. See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with
-# the License. You may obtain a copy of the License at
+#  Copyright 2023 The original authors
 #
-#    http://www.apache.org/licenses/LICENSE-2.0
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+
+#  http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-version: '2.4'
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+version: '3.8'
 services:
   grafana:
     image: "grafana/grafana:${GRAFANA_VERSION}"
@@ -85,7 +85,10 @@ services:
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: 'false'
       KAFKA_HEAP_OPTS: ${KAFKA_BROKER_HEAP_OPTS}
-    mem_limit: ${KAFKA_BROKER_MEM_LIMIT}
+    deploy:
+      resources:
+        limits:
+          memory: ${KAFKA_BROKER_MEM_LIMIT}
 
   kafka-schema-registry:
     image: confluentinc/cp-schema-registry:${CONFLUENT_VERSION}
@@ -101,7 +104,10 @@ services:
     depends_on:
       - zk1
       - kafka101
-    mem_limit: ${SCHEMA_REGISTRY_MEM_LIMIT}
+    deploy:
+      resources:
+        limits:
+          memory: ${SCHEMA_REGISTRY_MEM_LIMIT}
 
   ksqldb-server:
     image: confluentinc/cp-ksqldb-server:${CONFLUENT_VERSION}
@@ -120,10 +126,13 @@ services:
       - kafka101
     volumes:
       - ./ksqldb-extensions:/var/lib/ksql/extension/
-    mem_limit: ${KAFKA_KSQL_MEM_LIMIT}
+    deploy:
+      resources:
+        limits:
+          memory: ${KAFKA_KSQL_MEM_LIMIT}
 
   kafka-connect:
-    image: confluentinc/cp-kafka-connect:${CONFLUENT_VERSION}
+    image: confluentinc/cp-kafka-connect-base:${CONFLUENT_VERSION}
     hostname: kafka-connect
     ports:
       - "8083:8083"
@@ -154,7 +163,10 @@ services:
       - zk1
       - kafka101
       - kafka-schema-registry
-    mem_limit: ${KAFKA_CONNECT_MEM_LIMIT}
+    deploy:
+      resources:
+        limits:
+          memory: ${KAFKA_CONNECT_MEM_LIMIT}
 
   zoonavigator:
     image: elkozmon/zoonavigator:${ZOONAVIGATOR_VERSION}

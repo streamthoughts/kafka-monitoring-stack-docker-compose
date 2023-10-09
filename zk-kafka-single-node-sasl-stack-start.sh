@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #  Copyright 2023 The original authors
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,21 +13,18 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-set -e;
+set -e
 
-configDir=$(readlink -f $0 | xargs dirname)/../etc
+DIR=$(readlink -f $0 | xargs dirname)
 
-DOCKER_KAFKA_OPTS=""
-DOCKER_MOUNT_SECRETS=""
+script="$(basename "$0")"
+stack=${script%-stack-start.*}
+"$DIR/up" -n "$stack" zk1
+echo "Creating default kafka user for SASL/SCRAM"
+. "${DIR}"/bin/create-admin-scram-users
 
-if [ "$SECURITY_ENABLE" = "true" ]; then
-    echo "security_enable=true"
-    DOCKER_KAFKA_OPTS="--env KAFKA_OPTS=\"-Djava.security.auth.login.config=/etc/kafka/secrets/kafka_server_jaas.conf -Dzookeeper.sasl.clientconfig=ZkClient\""
-    DOCKER_MOUNT_SECRETS="--mount type=bind,source=${configDir}/secrets/,target=/etc/kafka/secrets/"
-fi 
-
-eval "docker run -it ${DOCKER_MOUNT_SECRETS} ${DOCKER_KAFKA_OPTS} \
- --network="host" \
-confluentinc/cp-kafka:latest /usr/bin/kafka-configs $@"
+echo -e "\n🐳 Starting Kafka Brokers..."
+docker-compose -f "$DIR/zk-kafka-single-node-secured-stack.yml" up -d
+docker-compose -f "$DIR/zk-kafka-single-node-secured-stack.yml" ps
 
 exit 0

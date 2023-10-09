@@ -1,0 +1,89 @@
+#!/bin/bash
+#  Copyright 2023 The original authors
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+set -e
+
+BASEDIR=$(dirname "$(readlink -f $0)")
+DOCKERDIR="$BASEDIR"
+
+line() {
+  echo -e "\n----------------------------------------------------------------------------------------------------------------------------------------\n"
+}
+banner() {
+  line
+  echo -e "      ____        __           _____ __                            _             "
+  echo -e "     / __ \____ _/ /_____ _   / ___// /_________  ____ _____ ___  (_)___  ____ _ "
+  echo -e "    / / / / __ \`/ __/ __ \`/   \__ \/ __/ ___/ _ \/ __ \`/ __ \`__ \/ / __ \/ __ \`/ "
+  echo -e "   / /_/ / /_/ / /_/ /_/ /   ___/ / /_/ /  /  __/ /_/ / / / / / / / / / / /_/ /  "
+  echo -e "  /_____/\__,_/\__/\__,_/   /____/\__/_/   \___/\__,_/_/ /_/ /_/_/_/ /_/\__, /   "
+  echo -e "                                                                        /____/   "
+  echo ""
+  echo " Powered by Apache Kafka!"
+  line
+}
+
+usage() {
+  echo "Usage: $0 [options]" 1>&2 && \
+  echo -e "\t -n <[NAME]>      \t: Name of stack to deploy" 1>&2 && \
+  echo -e "\t -s <[SERVICE]>   \t: Service names to deploy" 1>&2 && \
+  echo -e "\t -h               \t: Print this Help." 1>&2; exit 1;
+}
+
+STACK_NAME=""
+SERVICE=""
+while getopts "dhc:s:n:" o; do
+    case "${o}" in
+	      n) STACK_NAME="${OPTARG}";;
+	      s) SERVICE="${OPTARG}";;
+        h|*)
+            usage
+            ;;
+    esac
+done
+
+DOCKER_STACK="$DOCKERDIR/$STACK_NAME-stack.yml"
+
+if [[ ! -f "$DOCKER_STACK" ]]; then
+  echo "Cannot find docker-compose file $STACK_NAME-stack.yml. Available stacks are:"
+  for COMPOSE in "$DOCKERDIR/"*.yml; do
+      if [[ "$COMPOSE" =~ .*/(.*).yml ]]
+      then
+          NAME="${BASH_REMATCH[1]}"
+          echo -e " - $NAME";
+      fi
+  done
+  exit 1;
+fi
+
+banner
+
+echo -e "\n🐳 Stopping previous Kafka Docker-Compose stacks..."
+for COMPOSE in "$DOCKERDIR/"*.yml; do
+  echo "Removing stack for $COMPOSE"
+  (cd "$BASEDIR"; docker compose -f "$COMPOSE" down --remove-orphans)
+done
+
+echo -e "\n🐳 Starting Kafka Docker-Compose stack..."
+(cd "$BASEDIR"; docker compose -f "$DOCKER_STACK" up -d $SERVICE)
+
+line
+echo -e "Grafana (Login : admin / Password : kafka) : http://localhost:3000"
+echo -e "Prometheus : http://localhost:9090"
+line
+
+echo -e "\n Use the below client config properties for connecting to Kafka:"
+echo -e "\tbootstrap.servers=localhost:9092"
+
+exit 0

@@ -1,18 +1,18 @@
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements. See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with
-# the License. You may obtain a copy of the License at
+#  Copyright 2023 The original authors
 #
-#    http://www.apache.org/licenses/LICENSE-2.0
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+
+#  http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-version: '3'
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+#
+version: '3.8'
 services:
   grafana:
     image: "grafana/grafana:${GRAFANA_VERSION}"
@@ -27,6 +27,8 @@ services:
     container_name: grafana
     depends_on:
      - prometheus
+    networks:
+      - kafka-platform
 
   prometheus:
     image: "prom/prometheus:${PROMETHEUS_VERSION}"
@@ -36,6 +38,8 @@ services:
      - ./etc/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     command: "--config.file=/etc/prometheus/prometheus.yml"
     container_name: prometheus
+    networks:
+      - kafka-platform
 
   jmx-kafka101:
     image: "sscaling/jmx-prometheus-exporter"
@@ -48,6 +52,8 @@ services:
     container_name: jmx-kafka101
     depends_on:
      - kafka101
+    networks:
+      - kafka-platform
 
   zk1:
     image: confluentinc/cp-zookeeper:${CONFLUENT_VERSION}
@@ -59,6 +65,8 @@ services:
     ports:
      - "2181:2181"
     container_name: zookeeper1
+    networks:
+      - kafka-platform
 
   kafka101:
     image: confluentinc/cp-kafka:${CONFLUENT_VERSION}
@@ -84,3 +92,9 @@ services:
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: 'false'
       KAFKA_HEAP_OPTS: ${KAFKA_HEAP_OPTS}
+    networks:
+      - kafka-platform
+
+networks:
+  kafka-platform:
+    driver: bridge

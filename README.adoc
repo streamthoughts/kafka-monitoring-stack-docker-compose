@@ -45,36 +45,36 @@ Start/Stop with:
 
 [source,bash]
 ----
-$ ./single-node-stack-start.sh
-$ ./single-node-stack-stop.sh
+$ ./zk-kafka-single-node-stack-start.sh
+$ ./zk-kafka-single-node-stack-stop.sh
 
 # or directly
-$ docker-compose -f  zk-kafka-single-node-stack.yml up -d
-$ docker-compose -f  zk-kafka-single-node-stack.yml down
+$ docker-compose -f zk-kafka-single-node-stack.yml up -d
+$ docker-compose -f zk-kafka-single-node-stack.yml down
 ----
 
 === Single Zookeeper / Multiple Kafka with Prometheus/Grafana
 
 [source,bash]
 ----
-$ docker-compose -f  zk-kafka-multiple-nodes-stack.yml up -d
-$ docker-compose -f  zk-kafka-multiple-nodes-stack.yml down
+$ docker-compose -f zk-kafka-multiple-nodes-stack.yml up -d
+$ docker-compose -f zk-kafka-multiple-nodes-stack.yml down
 ----
 
 === Single Zookeeper/Kafka with Prometheus/Grafana (SASL/PLAINTEXT)
 
 [source,bash]
 ----
-$ ./sasl-single-node-stack-start.sh
-$ ./sasl-single-node-stack-stop.sh
+$ ./zk-kafka-single-node-sasl-stack-start.sh
+$ ./zk-kafka-single-node-sasl-stack-stop.sh
 ----
 
 === Single Zookeeper / Multiple Kafka with Prometheus/Grafana (SASL/PLAINTEXT)
 
 [source,bash]
 ----
-$ docker-compose -f  zk-kafka-multiple-nodes-secured-stack.yml up -d
-$ docker-compose -f  zk-kafka-multiple-nodes-secured-stack.yml down
+$ docker-compose -f  zk-kafka-multiple-nodes-sasl-stack.yml up -d
+$ docker-compose -f  zk-kafka-multiple-nodes-sasl-stack.yml down
 ----
 
 === Full Stack (single node Kafka Cluster)
@@ -175,7 +175,7 @@ Any feedback, bug reports and PRs are greatly appreciated!
 
 == Licence
 
-Copyright 2020 StreamThoughts.
+Copyright 2020-2023 StreamThoughts.
 
 Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file to you under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
 
