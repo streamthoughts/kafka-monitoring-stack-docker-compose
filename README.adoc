@@ -23,6 +23,48 @@ toc::[]
 * AKHQ (https://akhq.io/)
 * ZooNavigator (https://zoonavigator.elkozmon.com/en/stable/)
 
+== Usage
+
+[source, bash]
+----
+$ ./up -h
+
+--------------------------------------------------------------------------------
+      ____        __           _____ __                            _
+     / __ \____ _/ /_____ _   / ___// /_________  ____ _____ ___  (_)___  ____ _
+    / / / / __ `/ __/ __ `/   \__ \/ __/ ___/ _ \/ __ `/ __ `__ \/ / __ \/ __ `/
+   / /_/ / /_/ / /_/ /_/ /   ___/ / /_/ /  /  __/ /_/ / / / / / / / / / / /_/ /
+  /_____/\__,_/\__/\__,_/   /____/\__/_/   \___/\__,_/_/ /_/ /_/_/_/ /_/\__, /
+                                                                        /____/
+
+ Powered by Apache Kafka!
+
+--------------------------------------------------------------------------------
+Usage: ./up [options]
+	 -n <[NAME]>      	: Name of the stack to deploy (required)
+	 -s <[SERVICE]>   	: Service names to deploy (run all services if empty)
+	 -h               	: Print this Help.
+
+The table below lists the available docker-compose stacks:
+
+NAME (./up -n <NAME>)              |	FILE (docker compose -f <FILE> up -d)
+===================================+==================================================
+zk-kafka-multiple-nodes-sasl       |	zk-kafka-multiple-nodes-sasl-stack.yml
+zk-kafka-multiple-nodes            |	zk-kafka-multiple-nodes-stack.yml
+zk-kafka-single-node-full          |	zk-kafka-single-node-full-stack.yml
+zk-kafka-single-node-sasl          |	zk-kafka-single-node-sasl-stack.yml
+zk-kafka-single-node               |	zk-kafka-single-node-stack.yml
+zkless-kafka-multiple-nodes        |	zkless-kafka-multiple-nodes-stack.yml
+----
+
+=== Examples
+
+**To deploy a Kafka Cluster (Kraft)**
+[source, bash]
+----
+$ ./up -n zkless-kafka-multiple-nodes
+----
+
 == Getting Started
 
 **1. Clone the Kafka Monitoring Suite repository.**
@@ -169,16 +211,14 @@ Security are :
 
 Prometheus is accessible at the address : http://localhost:9090
 
-== Contributions
+== 💡 Contributions
 
 Any feedback, bug reports and PRs are greatly appreciated!
 
+== 🙏 Show your support
+
+Please ⭐ this repository to support us!
+
 == Licence
 
-Copyright 2020-2023 StreamThoughts.
-
-Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file to you under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0["http://www.apache.org/licenses/LICENSE-2.0"]
-
-Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License
+This code base is available under the Apache License, version 2.

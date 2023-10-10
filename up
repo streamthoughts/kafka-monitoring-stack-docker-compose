@@ -19,7 +19,9 @@ BASEDIR=$(dirname "$(readlink -f $0)")
 DOCKERDIR="$BASEDIR"
 
 line() {
-  echo -e "\n----------------------------------------------------------------------------------------------------------------------------------------\n"
+  echo ""
+  printf "%.0s-" {1..80};
+  echo ""
 }
 banner() {
   line
@@ -36,10 +38,32 @@ banner() {
 
 usage() {
   echo "Usage: $0 [options]" 1>&2 && \
-  echo -e "\t -n <[NAME]>      \t: Name of stack to deploy" 1>&2 && \
-  echo -e "\t -s <[SERVICE]>   \t: Service names to deploy" 1>&2 && \
-  echo -e "\t -h               \t: Print this Help." 1>&2; exit 1;
+  echo -e "\t -n <[NAME]>      \t: Name of the stack to deploy (required)" 1>&2 && \
+  echo -e "\t -s <[SERVICE]>   \t: Service names to deploy (run all services if empty)" 1>&2 && \
+  echo -e "\t -h               \t: Print this Help." 1>&2 && \
+  print_available_stacks && \
+  exit 1;
 }
+
+print_available_stacks() {
+  echo -e "\nThe table below lists the available docker-compose stacks:\n"
+  printf "%-35s|\t%-50s\n" "NAME (./up -n <NAME>)" "FILE (docker compose -f <FILE> up -d)";
+  printf "=%.0s" {1..35};
+  echo -n "+";
+  printf "=%.0s" {1..50};
+  echo ""
+  for COMPOSE in "$DOCKERDIR/"*.yml; do
+      RELATIVE_PATH=$(realpath --relative-to="$BASEDIR" "$COMPOSE");
+      if [[ "$COMPOSE" =~ .*/(.*)-stack.yml ]]
+      then
+          NAME="${BASH_REMATCH[1]}";
+          printf "%-35s|\t%-50s\n" "$NAME" "$RELATIVE_PATH";
+      fi
+  done
+}
+
+# Printf
+banner
 
 STACK_NAME=""
 SERVICE=""
@@ -53,31 +77,33 @@ while getopts "dhc:s:n:" o; do
     esac
 done
 
-DOCKER_STACK="$DOCKERDIR/$STACK_NAME-stack.yml"
-
-if [[ ! -f "$DOCKER_STACK" ]]; then
-  echo "Cannot find docker-compose file $STACK_NAME-stack.yml. Available stacks are:"
-  for COMPOSE in "$DOCKERDIR/"*.yml; do
-      if [[ "$COMPOSE" =~ .*/(.*).yml ]]
-      then
-          NAME="${BASH_REMATCH[1]}"
-          echo -e " - $NAME";
-      fi
-  done
-  exit 1;
+# Check required arguments
+if [[ -z "$STACK_NAME" ]]; then
+  usage
+  exit 2
 fi
 
-banner
+DOCKER_STACK="$DOCKERDIR/$STACK_NAME-stack.yml"
 
-echo -e "\n🐳 Stopping previous Kafka Docker-Compose stacks..."
+# Check docker compose fil exists
+if [[ ! -f "$DOCKER_STACK" ]]; then
+  echo "Error: Cannot find docker-compose file '$STACK_NAME-stack.yml'."
+  print_available_stacks
+  exit 2
+fi
+
+# Stop any previous stack
+echo -e "\n🐳 Stopping Kafka Docker-Compose stacks..."
 for COMPOSE in "$DOCKERDIR/"*.yml; do
   echo "Removing stack for $COMPOSE"
   (cd "$BASEDIR"; docker compose -f "$COMPOSE" down --remove-orphans)
 done
 
+# Start
 echo -e "\n🐳 Starting Kafka Docker-Compose stack..."
 (cd "$BASEDIR"; docker compose -f "$DOCKER_STACK" up -d $SERVICE)
 
+# Printf
 line
 echo -e "Grafana (Login : admin / Password : kafka) : http://localhost:3000"
 echo -e "Prometheus : http://localhost:9090"
