@@ -18,8 +18,8 @@ set -e
 DIR=$(readlink -f $0 | xargs dirname)
 
 echo -e "\n🐳 Stopping Kafka Brokers..."
-script="$(basename "$0")"
-file="${script%-stack-start.*}-stack.yml"
+script="$(basename "$0" "-stop.sh")"
+file="${script%}.yml"
 
 docker compose -f "$DIR/$file" down --remove-orphans
 docker compose -f "$DIR/$file" ps
