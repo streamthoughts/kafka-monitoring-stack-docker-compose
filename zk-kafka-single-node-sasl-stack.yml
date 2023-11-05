@@ -118,4 +118,5 @@ services:
 
 networks:
   kafka-platform:
+    name: kafka-platform
     driver: bridge
